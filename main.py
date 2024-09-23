@@ -153,7 +153,7 @@ class Main:
         try:
             x = int(self.x0_entry.get())
             y = int(self.y0_entry.get())
-            v0 = float(self.v0_entry.get())
+            v0 = float(self.v0_entry.get())*10
             angle = float(self.angle_entry.get())
         except ValueError:
             return  # 無効な値は無視
@@ -173,7 +173,7 @@ class Main:
         self.temp_arrow = self.cv.create_line(x, y, arrow_x, arrow_y, fill="#bc8f8f", arrow=tk.LAST, width=3)
 
     def get_form(self):
-        self.v0 = float(self.v0_entry.get())
+        self.v0 = float(self.v0_entry.get())*10
         self.angle = float(self.angle_entry.get())
         self.x0 = int(self.x0_entry.get())
         self.y0 = int(self.y0_entry.get())
