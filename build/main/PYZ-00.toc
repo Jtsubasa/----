@@ -1,5 +1,5 @@
 ('C:\\Users\\諏訪\u3000'
- '翼\\OneDrive\\Documents\\玉シミュレーション\\build\\main\\PYZ-00.pyz',
+ '翼\\OneDrive\\Documents\\投射シミュレーション\\build\\main\\PYZ-00.pyz',
  [('_compat_pickle',
    'C:\\Users\\諏訪\u3000'
    '翼\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_compat_pickle.py',
