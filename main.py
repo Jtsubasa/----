@@ -100,7 +100,7 @@ class Main:
         self.x0_label.grid(row=6, column=0, padx=10, pady=5, sticky="e")
         self.x0_entry = tk.Entry(self.form_frame, font=LABEL_FONT)
         self.x0_entry.grid(row=6, column=1, padx=10, pady=5)
-        self.x0_entry.insert(0, "10")  # 初期値
+        self.x0_entry.insert(0, "15")  # 初期値
         self.x0_entry.bind("<KeyRelease>", self.on_value_change)
 
         # 初期 y 座標 (y_0)
@@ -108,7 +108,7 @@ class Main:
         self.y0_label.grid(row=7, column=0, padx=10, pady=5, sticky="e")
         self.y0_entry = tk.Entry(self.form_frame, font=LABEL_FONT)
         self.y0_entry.grid(row=7, column=1, padx=10, pady=5)
-        self.y0_entry.insert(0, "10")  # 初期値
+        self.y0_entry.insert(0, "15")  # 初期値
         self.y0_entry.bind("<KeyRelease>", self.on_value_change)
 
         # シミュレータ幅
@@ -158,10 +158,10 @@ class Main:
         except ValueError:
             return  # 無効な値は無視
 
-        # 半透明の円を描画
+        # 半透明の円を描画（2倍サイズ）
         if self.temp_circle:
             self.cv.delete(self.temp_circle)
-        self.temp_circle = self.cv.create_oval(x - 5, y - 5, x + 5, y + 5, outline="#bc8f8f", fill="#bc8f8f")
+        self.temp_circle = self.cv.create_oval(x - 10, y - 10, x + 10, y + 10, outline="#bc8f8f", fill="#bc8f8f")
 
         # 半透明の矢印を描画
         if self.temp_arrow:
@@ -204,10 +204,10 @@ class Main:
             # 画面クリア
             self.cv.delete('all')
 
-            # 円を描画
+            # 2倍サイズの円を描画
             if self.circle:
                 self.cv.delete(self.circle)
-            self.circle = self.cv.create_oval(self.x0 - 5, self.y0 - 5, self.x0 + 5, self.y0 + 5, fill="red")
+            self.circle = self.cv.create_oval(self.x0 - 10, self.y0 - 10, self.x0 + 10, self.y0 + 10, fill="red")
 
             # 矢印を描画
             if self.arrow:
@@ -226,10 +226,6 @@ class Main:
         except ValueError as e:
             messagebox.showerror("入力エラー", str(e))
 
-
-        except ValueError as e:
-            messagebox.showerror("入力エラー", str(e))
-
     def simulation(self):
         self.simulating = True
 
@@ -237,7 +233,7 @@ class Main:
         self.apply_button.config(state=tk.DISABLED)
         self.start_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.NORMAL)
-    
+
         # フォームのエントリーを無効化
         self.v0_entry.config(state=tk.DISABLED)
         self.angle_entry.config(state=tk.DISABLED)
@@ -250,28 +246,77 @@ class Main:
         self.width_entry.config(state=tk.DISABLED)
         self.height_entry.config(state=tk.DISABLED)
 
+        # 初期位置と速度
         self.x = self.x0
         self.y = self.y0
+        rad = math.radians(self.angle)
+
+        # 水平と垂直の初速度を計算 (角度に応じてvx, vyを設定)
+        self.vx = self.v0 * math.cos(rad)  # 初速度の水平成分
+        if(0 <= self.angle and self.angle <= 180):
+            self.vy = self.v0 * math.sin(rad)  # 初速度の垂直成分
+        else:
+            self.vy = -self.v0 * math.sin(rad)  # 初速度の垂直成分
+
+        # シミュレーション開始時間を記録
+        self.start_time = time.time()
+
+        # シミュレーションループの開始
+        self.simulation_loop()
 
     def simulation_loop(self):
         if not self.simulating:
             return
 
-        print(self.simulating)
-        self.get_form()
+        # 経過時間の計算
+        current_time = time.time()
+        dt = 0.01  # シミュレーションの1ステップの時間（秒）
+
+        # 垂直速度に重力加速度を加える
+        self.vy += self.g * dt
+
+        # 位置を更新
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+
+        # 地面に衝突した場合の処理
+        ground_level = self.height - 10  # ボールの半径を考慮
+        if self.y >= ground_level:
+            # 反発係数を用いてバウンド
+            self.y = ground_level
+            self.vy = -self.vy * self.e
+
+            # バウンドが非常に小さくなったら、転がり始める
+            if abs(self.vy) < 1:
+                self.vy = 0  # 縦方向の速度を0にして転がる
+                # 摩擦による水平方向の減速
+                friction_force = self.μ * self.m * self.g  # 摩擦力
+                acceleration_friction = friction_force / self.m  # 摩擦による減速
+                if self.vx > 0:
+                    self.vx -= acceleration_friction * dt
+                    if self.vx < 0:
+                        self.vx = 0
+                elif self.vx < 0:
+                    self.vx += acceleration_friction * dt
+                    if self.vx > 0:
+                        self.vx = 0
+
+        # 左右の壁に衝突した場合の処理
+        if self.x <= 15 or self.x >= self.width - 15:  # 壁の判定を修正
+            self.vx = -self.vx  # 水平方向の速度を反転
 
         # 画面クリア
         self.cv.delete('all')
 
-        # 円を描画
+        # 2倍サイズの円を描画
         if self.circle:
-           self.cv.delete(self.circle)
-        self.circle = self.cv.create_oval(self.x - 5, self.y - 5, self.x + 5, self.y + 5, fill="red")
+            self.cv.delete(self.circle)
+        self.circle = self.cv.create_oval(self.x - 10, self.y - 10, self.x + 10, self.y + 10, fill="red")
 
-        self.y += 5
-        self.simulator.after(10, self.simulation_loop)  # 修正
+        # シミュレーションを次のフレームに進める
+        self.simulator.after(int(dt * 1000), self.simulation_loop)
 
-    
+
     def stop_simulation(self):
         self.simulating = False
         # ボタンを有効化
@@ -290,6 +335,9 @@ class Main:
         self.y0_entry.config(state=tk.NORMAL)
         self.width_entry.config(state=tk.NORMAL)
         self.height_entry.config(state=tk.NORMAL)
+
+        self.apply_settings()
+
 
     def close_windows(self):
         # Close the main window, which will automatically close the child window
