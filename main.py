@@ -26,6 +26,7 @@ class Main:
         self.temp_circle = None  # 半透明の円のID
         self.arrow = None  # 赤い矢印のID
         self.temp_arrow = None  # 半透明の矢印のID
+        self.simulating = False
 
         self.apply_settings()  # プログラム開始時に赤い円を表示
 
@@ -129,19 +130,23 @@ class Main:
         self.apply_button = tk.Button(self.button_frame, text="決定", padx=50, pady=10, font=BUTTON_FONT, bg=SECONDARY_COLOR, width=10, command=self.apply_settings, state=tk.DISABLED)
         self.apply_button.pack(side=tk.TOP, padx=5, pady=30)
 
-        self.start_button = tk.Button(self.button_frame, text="シミュレーション開始", padx=50, pady=10, font=BUTTON_FONT, bg=SECONDARY_COLOR, width=10, command=self.simulate state=tk.NORMAL)
+        self.start_button = tk.Button(self.button_frame, text="シミュレーション開始", padx=50, pady=10, font=BUTTON_FONT, bg=SECONDARY_COLOR, width=10, command=self.simulation, state=tk.NORMAL)
         self.start_button.pack(side=tk.LEFT, padx=5)
 
-        self.stop_button = tk.Button(self.button_frame, text="戻す", padx=50, pady=10, font=BUTTON_FONT, bg=ACCENT_COLOR, width=10,state=tk.DISABLED)
+        self.stop_button = tk.Button(self.button_frame, text="戻す", padx=50, pady=10, font=BUTTON_FONT, bg=ACCENT_COLOR, width=10, command=self.stop_simulation ,state=tk.DISABLED)
         self.stop_button.pack(side=tk.LEFT, padx=5)
 
     def on_value_change(self, event=None):
+        if self.simulating:
+            return
         # フォームの値が変更されたときに「決定」ボタンを有効化
         self.apply_button.config(state=tk.NORMAL)
         self.start_button.config(state=tk.DISABLED)
         self.update_circle()  # 半透明の円と矢印を更新
 
     def update_circle(self, event=None):
+        if self.simulating:
+            return
         try:
             x = int(self.x0_entry.get())
             y = int(self.y0_entry.get())
@@ -165,6 +170,8 @@ class Main:
         self.temp_arrow = self.cv.create_line(x, y, arrow_x, arrow_y, fill="#bc8f8f", arrow=tk.LAST, width=3)
 
     def apply_settings(self):
+        if self.simulating:
+            return
         try:
             v0 = float(self.v0_entry.get())
             angle = float(self.angle_entry.get())
@@ -202,16 +209,55 @@ class Main:
             arrow_x = x0 + v0 * math.cos(rad)
             arrow_y = y0 - v0 * math.sin(rad)  # y座標は反転
             self.arrow = self.cv.create_line(x0, y0, arrow_x, arrow_y, fill="red", arrow=tk.LAST, width=3)
-            
+
+            self.start_button.config(state=tk.NORMAL)
+
         except ValueError as e:
             messagebox.showerror("入力エラー", str(e))
 
-    def simulate(self):
+    def simulation(self):
+        self.simulating = True
+        # ボタンを無効化
+        self.apply_button.config(state=tk.DISABLED)
+        self.start_button.config(state=tk.DISABLED)
+        self.stop_button.config(state=tk.NORMAL)
+    
+        # フォームのエントリーを無効化
+        self.v0_entry.config(state=tk.DISABLED)
+        self.angle_entry.config(state=tk.DISABLED)
+        self.e_entry.config(state=tk.DISABLED)
+        self.g_entry.config(state=tk.DISABLED)
+        self.m_entry.config(state=tk.DISABLED)
+        self.μ_entry.config(state=tk.DISABLED)
+        self.x0_entry.config(state=tk.DISABLED)
+        self.y0_entry.config(state=tk.DISABLED)
+        self.width_entry.config(state=tk.DISABLED)
+        self.height_entry.config(state=tk.DISABLED)
+
+    def stop_simulation(self):
+        self.simulating = False
+        # ボタンを有効化
+        self.apply_button.config(state=tk.NORMAL)
+        self.start_button.config(state=tk.NORMAL)
+        self.stop_button.config(state=tk.DISABLED)
+    
+        # フォームのエントリーを有効化
+        self.v0_entry.config(state=tk.NORMAL)
+        self.angle_entry.config(state=tk.NORMAL)
+        self.e_entry.config(state=tk.NORMAL)
+        self.g_entry.config(state=tk.NORMAL)
+        self.m_entry.config(state=tk.NORMAL)
+        self.μ_entry.config(state=tk.NORMAL)
+        self.x0_entry.config(state=tk.NORMAL)
+        self.y0_entry.config(state=tk.NORMAL)
+        self.width_entry.config(state=tk.NORMAL)
+        self.height_entry.config(state=tk.NORMAL)
+
 
 
     def close_windows(self):
+        # Close the main window, which will automatically close the child window
         self.window.destroy()
-        self.simulator.destroy()
 
 # メインループの開始
 if __name__ == "__main__":
