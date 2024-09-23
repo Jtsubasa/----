@@ -5,6 +5,9 @@ import time
 
 class Main:
     def __init__(self):
+        self.x = 0
+        self.y = 0
+
         self.window = tk.Tk()
         self.window.title("投射シミュレーション設定")
         self.window.config(bg="#87cefa")
@@ -73,7 +76,7 @@ class Main:
         self.g_label.grid(row=3, column=0, padx=10, pady=5, sticky="e")
         self.g_entry = tk.Entry(self.form_frame, font=LABEL_FONT)
         self.g_entry.grid(row=3, column=1, padx=10, pady=5)
-        self.g_entry.insert(0, "9.8")  # 初期値
+        self.g_entry.insert(0, "9.81")  # 初期値
         self.g_entry.bind("<KeyRelease>", self.on_value_change)
 
         # 質量 m(kg)
@@ -185,6 +188,7 @@ class Main:
     def apply_settings(self):
         if self.simulating:
             return
+        
         try:
             self.get_form()
 
@@ -228,6 +232,7 @@ class Main:
 
     def simulation(self):
         self.simulating = True
+
         # ボタンを無効化
         self.apply_button.config(state=tk.DISABLED)
         self.start_button.config(state=tk.DISABLED)
@@ -245,51 +250,28 @@ class Main:
         self.width_entry.config(state=tk.DISABLED)
         self.height_entry.config(state=tk.DISABLED)
 
-        self.get_form()
-
         self.x = self.x0
         self.y = self.y0
-        self.Counter = 0
 
-        if(self.v0 == 0):
-            self.Free_fall()
+    def simulation_loop(self):
+        if not self.simulating:
+            return
 
-    def Free_fall(self):
+        print(self.simulating)
         self.get_form()
 
-        self.Time_stop_vertical = (math.sqrt(2 * self.y0 / self.g)) * (1 + self.e) / (1 - self.e)
-        self.start_time = time.perf_counter()  # 開始時間の記録
-        self.progress_time = 0  # 経過時間
-        self.end_time = 0  # 最終時間
+        # 画面クリア
+        self.cv.delete('all')
 
-        # 落下シミュレーションをループする関数を呼び出す
-        self.update_free_fall()
+        # 円を描画
+        if self.circle:
+           self.cv.delete(self.circle)
+        self.circle = self.cv.create_oval(self.x - 5, self.y - 5, self.x + 5, self.y + 5, fill="red")
 
-    def update_free_fall(self):
-        if self.simulating:
-            self.get_form()
+        self.y += 5
+        self.simulator.after(10, self.simulation_loop)  # 修正
 
-            # 経過時間の更新
-            current_time = time.perf_counter()
-            self.progress_time = current_time - self.start_time
-
-            # 垂直位置の計算
-            if self.progress_time <= self.end_time:
-                y = self.y0 - (0.5 * self.g * self.progress_time ** 2)
-
-                self.cv.delete('all')
-
-                # 描画更新
-                if self.circle:
-                    self.cv.delete(self.circle)
-                self.circle = self.cv.create_oval(self.x0 - 5, y - 5, self.x0 + 5, y + 5, fill="red")
-
-
-            # 次の更新を一定時間後に再度呼び出す (10ミリ秒ごと)
-            self.window.after(10, self.update_free_fall)
-
-
-
+    
     def stop_simulation(self):
         self.simulating = False
         # ボタンを有効化
@@ -309,8 +291,6 @@ class Main:
         self.width_entry.config(state=tk.NORMAL)
         self.height_entry.config(state=tk.NORMAL)
 
-
-
     def close_windows(self):
         # Close the main window, which will automatically close the child window
         self.window.destroy()
@@ -318,4 +298,6 @@ class Main:
 # メインループの開始
 if __name__ == "__main__":
     app = Main()
+    app.simulation_loop()  # メソッドを正しく呼び出す
     app.window.mainloop()
+
