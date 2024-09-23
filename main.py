@@ -169,48 +169,59 @@ class Main:
         arrow_y = y - v0 * math.sin(rad)  # y座標は反転
         self.temp_arrow = self.cv.create_line(x, y, arrow_x, arrow_y, fill="#bc8f8f", arrow=tk.LAST, width=3)
 
+    def get_form(self):
+        self.v0 = float(self.v0_entry.get())
+        self.angle = float(self.angle_entry.get())
+        self.x0 = int(self.x0_entry.get())
+        self.y0 = int(self.y0_entry.get())
+        self.e = float(self.e_entry.get())
+        self.g = float(self.g_entry.get())
+        self.m = float(self.m_entry.get())
+        self.μ = float(self.μ_entry.get())
+        self.width = int(self.width_entry.get())
+        self.height = float(self.height_entry.get())
+
+    
     def apply_settings(self):
         if self.simulating:
             return
         try:
-            v0 = float(self.v0_entry.get())
-            angle = float(self.angle_entry.get())
-            x0 = int(self.x0_entry.get())
-            y0 = int(self.y0_entry.get())
-            e = float(self.e_entry.get())
-            g = float(self.g_entry.get())
-            m = float(self.m_entry.get())
-            μ = float(self.μ_entry.get())
-            width = int(self.width_entry.get())
-            height = float(self.height_entry.get())
+            self.get_form()
 
-            if not (0 <= angle < 360):
+            if not (0 <= self.angle < 360):
                 raise ValueError("角度は0<=θ<360の範囲でなければなりません。")
-            
-            if not (0 <= e < 1):
+        
+            if not (0 <= self.e < 1):
                 raise ValueError("反発係数は0<=e<1の範囲でなければなりません。")
 
             # 決定ボタンを無効化
             self.apply_button.config(state=tk.DISABLED)
 
+            # 画面クリア
+            self.cv.delete('all')
+
             # 円を描画
             if self.circle:
                 self.cv.delete(self.circle)
-            self.circle = self.cv.create_oval(x0 - 5, y0 - 5, x0 + 5, y0 + 5, fill="red")
+            self.circle = self.cv.create_oval(self.x0 - 5, self.y0 - 5, self.x0 + 5, self.y0 + 5, fill="red")
 
             # 矢印を描画
             if self.arrow:
                 self.cv.delete(self.arrow)
 
             # windowサイズ変更
-            self.simulator.geometry(f"{int(width)}x{int(height)}+800+0")
+            self.simulator.geometry(f"{int(self.width)}x{int(self.height)}+800+0")
 
-            rad = math.radians(angle)
-            arrow_x = x0 + v0 * math.cos(rad)
-            arrow_y = y0 - v0 * math.sin(rad)  # y座標は反転
-            self.arrow = self.cv.create_line(x0, y0, arrow_x, arrow_y, fill="red", arrow=tk.LAST, width=3)
+            rad = math.radians(self.angle)
+            arrow_x = self.x0 + self.v0 * math.cos(rad)
+            arrow_y = self.y0 - self.v0 * math.sin(rad)  # y座標は反転
+            self.arrow = self.cv.create_line(self.x0, self.y0, arrow_x, arrow_y, fill="red", arrow=tk.LAST, width=3)
 
             self.start_button.config(state=tk.NORMAL)
+
+        except ValueError as e:
+            messagebox.showerror("入力エラー", str(e))
+
 
         except ValueError as e:
             messagebox.showerror("入力エラー", str(e))
@@ -233,6 +244,51 @@ class Main:
         self.y0_entry.config(state=tk.DISABLED)
         self.width_entry.config(state=tk.DISABLED)
         self.height_entry.config(state=tk.DISABLED)
+
+        self.get_form()
+
+        self.x = self.x0
+        self.y = self.y0
+        self.Counter = 0
+
+        if(self.v0 == 0):
+            self.Free_fall()
+
+    def Free_fall(self):
+        self.get_form()
+
+        self.Time_stop_vertical = (math.sqrt(2 * self.y0 / self.g)) * (1 + self.e) / (1 - self.e)
+        self.start_time = time.perf_counter()  # 開始時間の記録
+        self.progress_time = 0  # 経過時間
+        self.end_time = 0  # 最終時間
+
+        # 落下シミュレーションをループする関数を呼び出す
+        self.update_free_fall()
+
+    def update_free_fall(self):
+        if self.simulating:
+            self.get_form()
+
+            # 経過時間の更新
+            current_time = time.perf_counter()
+            self.progress_time = current_time - self.start_time
+
+            # 垂直位置の計算
+            if self.progress_time <= self.end_time:
+                y = self.y0 - (0.5 * self.g * self.progress_time ** 2)
+
+                self.cv.delete('all')
+
+                # 描画更新
+                if self.circle:
+                    self.cv.delete(self.circle)
+                self.circle = self.cv.create_oval(self.x0 - 5, y - 5, self.x0 + 5, y + 5, fill="red")
+
+
+            # 次の更新を一定時間後に再度呼び出す (10ミリ秒ごと)
+            self.window.after(10, self.update_free_fall)
+
+
 
     def stop_simulation(self):
         self.simulating = False
