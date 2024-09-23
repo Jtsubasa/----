@@ -253,13 +253,7 @@ class Main:
 
         # 水平と垂直の初速度を計算 (角度に応じてvx, vyを設定)
         self.vx = self.v0 * math.cos(rad)  # 初速度の水平成分
-        if(0 <= self.angle and self.angle <= 180):
-            self.vy = self.v0 * math.sin(rad)  # 初速度の垂直成分
-        else:
-            self.vy = -self.v0 * math.sin(rad)  # 初速度の垂直成分
-
-        # シミュレーション開始時間を記録
-        self.start_time = time.time()
+        self.vy = -self.v0 * math.sin(rad)  # 初速度の垂直成分
 
         # シミュレーションループの開始
         self.simulation_loop()
@@ -267,9 +261,7 @@ class Main:
     def simulation_loop(self):
         if not self.simulating:
             return
-
-        # 経過時間の計算
-        current_time = time.time()
+        
         dt = 0.01  # シミュレーションの1ステップの時間（秒）
 
         # 垂直速度に重力加速度を加える
