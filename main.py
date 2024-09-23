@@ -112,7 +112,7 @@ class Main:
         self.y0_entry.bind("<KeyRelease>", self.on_value_change)
 
         # シミュレータ幅
-        self.width_label = tk.Label(self.form_frame, text="シミュレータ幅:", font=LABEL_FONT, bg="#87cefa")
+        self.width_label = tk.Label(self.form_frame, text="シミュレータ幅(10pixelで1m):", font=LABEL_FONT, bg="#87cefa")
         self.width_label.grid(row=8, column=0, padx=10, pady=5, sticky="e")
         self.width_entry = tk.Entry(self.form_frame, font=LABEL_FONT)
         self.width_entry.grid(row=8, column=1, padx=10, pady=5)
@@ -120,7 +120,7 @@ class Main:
         self.width_entry.bind("<KeyRelease>", self.on_value_change)
 
         # シミュレータ高さ
-        self.height_label = tk.Label(self.form_frame, text="シミュレータ高さ:", font=LABEL_FONT, bg="#87cefa")
+        self.height_label = tk.Label(self.form_frame, text="シミュレータ高さ(10pixelで1m):", font=LABEL_FONT, bg="#87cefa")
         self.height_label.grid(row=9, column=0, padx=10, pady=5, sticky="e")
         self.height_entry = tk.Entry(self.form_frame, font=LABEL_FONT)
         self.height_entry.grid(row=9, column=1, padx=10, pady=5)
@@ -178,7 +178,7 @@ class Main:
         self.x0 = int(self.x0_entry.get())
         self.y0 = int(self.y0_entry.get())
         self.e = float(self.e_entry.get())
-        self.g = float(self.g_entry.get())
+        self.g = float(self.g_entry.get())*10
         self.m = float(self.m_entry.get())
         self.μ = float(self.μ_entry.get())
         self.width = int(self.width_entry.get())
@@ -348,4 +348,3 @@ if __name__ == "__main__":
     app = Main()
     app.simulation_loop()  # メソッドを正しく呼び出す
     app.window.mainloop()
-
