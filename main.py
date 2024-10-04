@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import Canvas, messagebox
 import math
-import time
 
 class Main:
     def __init__(self):
